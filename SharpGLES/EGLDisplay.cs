@@ -40,11 +40,11 @@ namespace SharpGLES
 
 		public void Dispose()
 		{
-			EGL.Terminate(_display);
-
 			EGL.DestroySurface(_display, _surface);
 
 			EGL.DestroyContext(_display, _context);
+			
+			EGL.Terminate(_display);
 
 #if !ORBIS
 			EGLDC.ReleaseDC(_handle, _nativeDisplay);
