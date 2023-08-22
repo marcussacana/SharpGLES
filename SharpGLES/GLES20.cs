@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -389,6 +391,18 @@ namespace SharpGLES
 
 		[DllImport(Path, EntryPoint = "glCompileShader")]
 		public static extern void CompileShader(int shader);
+
+		public unsafe static TextureFormats[] GetCompressFormats()
+		{
+            var Num = GetInteger(GL_NUM_COMPRESSED_TEXTURE_FORMATS);
+
+            TextureFormats[] Formats = new TextureFormats[Num];
+
+			fixed (void* pInts = &Formats[0])
+				GetInteger(GL_COMPRESSED_TEXTURE_FORMATS, pInts);
+
+			return Formats.ToArray();
+        }
 
 		[DllImport(Path, EntryPoint = "glCompressedTexImage2D")]
 		public static extern void CompressedTexImage2D (int target, int level, int internalformat, int width, int height, int border, int imageSize, IntPtr data);

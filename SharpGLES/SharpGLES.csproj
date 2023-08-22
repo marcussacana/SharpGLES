@@ -61,6 +61,7 @@
     <Compile Include="EGLDC.cs" />
     <Compile Include="EGL.cs" />
     <Compile Include="PS4Kernel.cs" />
+    <Compile Include="TextureFormats.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
