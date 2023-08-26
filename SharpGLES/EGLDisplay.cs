@@ -21,7 +21,7 @@ namespace SharpGLES
 		/// <param name="handle">Used only In PC</param>
 		/// <param name="Width">Used only In PS4</param>
 		/// <param name="Height">Used only In PS4</param>
-		public EGLDisplay(IntPtr handle, int Width, int Height, ulong VideoMemory = 512 * MB, ulong SystemMemory = 250 * MB, ulong FlexibleMemory = 170 * MB)
+		public EGLDisplay(IntPtr handle, int Width, int Height, ulong VideoMemory, ulong SystemMemory, ulong FlexibleMemory)
 		{
 			this.Width = Width;
 			this.Height = Height;
