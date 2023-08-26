@@ -392,11 +392,11 @@ namespace SharpGLES
 		[DllImport(Path, EntryPoint = "glCompileShader")]
 		public static extern void CompileShader(int shader);
 
-		public unsafe static TextureFormats[] GetCompressFormats()
+		public unsafe static TextureCompressionFormats[] GetCompressFormats()
 		{
             var Num = GetInteger(GL_NUM_COMPRESSED_TEXTURE_FORMATS);
 
-            TextureFormats[] Formats = new TextureFormats[Num];
+            TextureCompressionFormats[] Formats = new TextureCompressionFormats[Num];
 
 			fixed (void* pInts = &Formats[0])
 				GetInteger(GL_COMPRESSED_TEXTURE_FORMATS, pInts);

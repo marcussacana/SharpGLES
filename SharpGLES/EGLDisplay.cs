@@ -15,20 +15,19 @@ namespace SharpGLES
 		private IntPtr _context;
 		private IntPtr _handle;
 		
-		
 		/// <summary>
 		/// Initialize the EGL and Piglet if running in PS4
 		/// </summary>
 		/// <param name="handle">Used only In PC</param>
 		/// <param name="Width">Used only In PS4</param>
 		/// <param name="Height">Used only In PS4</param>
-		public EGLDisplay(IntPtr handle, int Width, int Height)
+		public EGLDisplay(IntPtr handle, int Width, int Height, ulong VideoMemory = 512 * MB, ulong SystemMemory = 250 * MB, ulong FlexibleMemory = 170 * MB)
 		{
 			this.Width = Width;
 			this.Height = Height;
 			
 #if ORBIS
-			InitializePiglet();
+			InitializePiglet(VideoMemory, SystemMemory, FlexibleMemory);
 			InitializeShaderCompiler();
 #else
 			_handle = handle;
@@ -120,7 +119,7 @@ namespace SharpGLES
 		private const uint KB = 1024;
 		private const uint MB = KB * 1024;
 		private const uint GB = MB * 1024;
-		private void InitializePiglet()
+		private void InitializePiglet(ulong SystemMemory, ulong VideoMemory, ulong FlexibleMemory)
 		{
 			var Module  = Kernel.LoadStartModule(EGL.Path);
 
@@ -134,9 +133,9 @@ namespace SharpGLES
 			Config.size = (uint)Marshal.SizeOf(typeof(EGL.ScePglConfig));
 			Config.flags = EGL.ORBIS_PGL_FLAGS_USE_COMPOSITE_EXT | EGL.ORBIS_PGL_FLAGS_USE_FLEXIBLE_MEMORY | 0x60;
 			Config.processOrder = 1;
-			Config.systemSharedMemorySize = 250 * MB;
-			Config.videoSharedMemorySize = 512 * MB;
-			Config.maxMappedFlexibleMemory = 170 * MB;
+			Config.systemSharedMemorySize = SystemMemory;
+			Config.videoSharedMemorySize = VideoMemory;
+			Config.maxMappedFlexibleMemory = FlexibleMemory;
 			Config.drawCommandBufferSize = 1 * MB;
 			Config.lcueResourceBufferSize = 1 * MB;
 			Config.dbgPosCmd_0x40 = (uint)Width;
