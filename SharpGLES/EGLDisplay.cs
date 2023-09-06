@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing.Text;
 using System.Runtime.InteropServices;
 using Orbis.Internals;
 
@@ -21,13 +22,13 @@ namespace SharpGLES
 		/// <param name="handle">Used only In PC</param>
 		/// <param name="Width">Used only In PS4</param>
 		/// <param name="Height">Used only In PS4</param>
-		public EGLDisplay(IntPtr handle, int Width, int Height, ulong VideoMemory, ulong SystemMemory, ulong FlexibleMemory)
+		public EGLDisplay(IntPtr handle, int Width, int Height, ulong SystemSharedMemory, ulong VideoSharedMemory, ulong FlexibleSharedMemory, ulong VideoPrivateMemory)
 		{
 			this.Width = Width;
 			this.Height = Height;
 			
 #if ORBIS
-			InitializePiglet(VideoMemory, SystemMemory, FlexibleMemory);
+			InitializePiglet(SystemSharedMemory, VideoSharedMemory, FlexibleSharedMemory, VideoPrivateMemory);
 			InitializeShaderCompiler();
 #else
 			_handle = handle;
@@ -119,7 +120,7 @@ namespace SharpGLES
 		private const uint KB = 1024;
 		private const uint MB = KB * 1024;
 		private const uint GB = MB * 1024;
-		private void InitializePiglet(ulong SystemMemory, ulong VideoMemory, ulong FlexibleMemory)
+		private void InitializePiglet(ulong SystemMemory, ulong VideoSharedMemory, ulong FlexibleMemory, ulong VideoPrivateMemory)
 		{
 			var Module  = Kernel.LoadStartModule(EGL.Path);
 
@@ -127,6 +128,9 @@ namespace SharpGLES
 			{
 				throw new DllNotFoundException($"LoadStartModule({EGL.Path}) result 0x{Module:X8}");
 			}
+
+			if (VideoPrivateMemory > 0)
+				SetCompositorMemory(SystemMemory, VideoSharedMemory, VideoPrivateMemory);
 			
 			EGL.ScePglConfig Config = new EGL.ScePglConfig();
 			
@@ -134,10 +138,10 @@ namespace SharpGLES
 			Config.flags = EGL.ORBIS_PGL_FLAGS_USE_COMPOSITE_EXT | EGL.ORBIS_PGL_FLAGS_USE_FLEXIBLE_MEMORY | 0x60;
 			Config.processOrder = 1;
 			Config.systemSharedMemorySize = SystemMemory;
-			Config.videoSharedMemorySize = VideoMemory;
+			Config.videoSharedMemorySize = VideoSharedMemory;
 			Config.maxMappedFlexibleMemory = FlexibleMemory;
-			Config.drawCommandBufferSize = 1 * MB;
-			Config.lcueResourceBufferSize = 1 * MB;
+			Config.drawCommandBufferSize = 3 * MB;
+			Config.lcueResourceBufferSize = 3 * MB;
 			Config.dbgPosCmd_0x40 = (uint)Width;
 			Config.dbgPosCmd_0x44 = (uint)Height;
 			Config.dbgPosCmd_0x48 = 0;
@@ -149,9 +153,31 @@ namespace SharpGLES
 				throw new Exception("Set Piglet configuration Failed");
 			}
 		}
-		
+
+		private void SetCompositorMemory(ulong SystemShared, ulong VideoShared, ulong VideoPrivate)
+		{
+			sceSysmoduleLoadModuleByNameInternal("libSceCompositeExt", 0, 0, 0, 0);
+            sceApplicationInitialize("libSceCompositeExt");
+			var Result = sceCompositorInitWithProcessOrder(SystemShared, VideoShared, VideoPrivate, 1);
+
+			if (Result != 0 && Result != 0x80D40003)
+			{
+				if (VideoShared + VideoPrivate > EGL.ORBIS_PGL_MAX_VIDEO_SHARED_MEM)
+					throw new OutOfMemoryException("The sum of the Video Private/Shared Memory shouldn't be bigger than 512MB");
+				
+				throw new Exception("Failed to Initialize the Compositor");
+			}
+		}
+
+		[DllImport("libSceSysmodule.sprx")]
+        private static extern uint sceSysmoduleLoadModuleByNameInternal(string Name, ulong UnkA, ulong UnkB, ulong UnkC, ulong UnkD);
+        [DllImport("libSceSysCore.sprx")]
+		private static extern void sceApplicationInitialize(string Name);
+
+        [DllImport("libSceCompositeExt.sprx")]
+		private static extern uint sceCompositorInitWithProcessOrder(ulong SystemSharedMemorySize, ulong VideoSharedMemorySize, ulong VideoPrivateMemorySize, ulong ProcessOrder);
 #endif
-		private void InitializeWindow()
+        private void InitializeWindow()
 		{
 #if !ORBIS
 			_nativeDisplay = EGLDC.GetDC(_handle);
