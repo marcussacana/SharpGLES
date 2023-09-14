@@ -89,8 +89,6 @@ namespace SharpGLES
 			byte* pTarget = (byte*)BaseAddress+0x5451F;
 			byte[] SetEAXTo1 = new byte[] { 0x31, 0xC0, 0xFF, 0xC0, 0x90 };
 
-
-
 			Kernel.MemProtect(pTarget, SetEAXTo1.Length, Kernel.PROT_EXEC | Kernel.PROT_READ | Kernel.PROT_WRITE);
 
 			for (int i = 0; i < SetEAXTo1.Length; i++)
