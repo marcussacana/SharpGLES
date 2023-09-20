@@ -529,6 +529,19 @@ namespace SharpGLES
 		//public static extern void glGetBufferParameteriv (int target, int pname, int  params);
 		*/
 
+		public static int GetLastError()
+		{
+			int Error = GL_NO_ERROR;
+			while (true)
+			{
+				var NextError = GetError();
+				if (NextError == GL_NO_ERROR)
+					return Error;
+				
+				Error = NextError;
+			} 
+		}
+
 		[DllImport(Path, EntryPoint = "glGetError")]
 		public static extern int GetError();
 
