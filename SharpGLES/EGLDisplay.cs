@@ -7,6 +7,7 @@ namespace SharpGLES
 {
 	public class EGLDisplay : IDisposable
 	{
+		private bool ForceShaderCompiler;
 		public int Width { get; private set; }
 		public int Height { get; private set; }
 
@@ -19,23 +20,24 @@ namespace SharpGLES
 		/// <summary>
 		/// Initialize the EGL and Piglet if running in PS4
 		/// </summary>
-		/// <param name="handle">Used only In PC</param>
-		/// <param name="Width">Used only In PS4</param>
-		/// <param name="Height">Used only In PS4</param>
-		public EGLDisplay(IntPtr handle, int Width, int Height, ulong SystemSharedMemory, ulong VideoSharedMemory, ulong FlexibleSharedMemory, ulong VideoPrivateMemory)
+		public EGLDisplay(EGLSettings Settings)
 		{
-			this.Width = Width;
-			this.Height = Height;
+			this.Width = Settings.Width;
+			this.Height = Settings.Height;
 			
 #if ORBIS
-			InitializePiglet(SystemSharedMemory, VideoSharedMemory, FlexibleSharedMemory, VideoPrivateMemory);
+			InitializePiglet(Settings.SystemSharedMemory, Settings.VideoSharedMemory, Settings.FlexibleSharedMemory, Settings.VideoPrivateMemory);
 			InitializeShaderCompiler();
 #else
-			_handle = handle;
+			_handle = Settings.Handle;
 #endif
+
+			this.ForceShaderCompiler = Settings.ForceShaderCompiler;
 			
 			InitializeWindow();
-			InitializeEL();
+			InitializeEGL();
+
+			Kernel.Log("OpenGL Initialized.");
 		}
 
 		public void Dispose()
@@ -81,6 +83,12 @@ namespace SharpGLES
 
 			bool Jailbroken = Kernel.IsJailbroken();
 
+			if (!Jailbroken && !ForceShaderCompiler)
+			{
+				Kernel.Log("OpenGL Shader Compiler Unavailable - The current process is jailed");
+				return;
+			}
+
 			if (!Jailbroken)
 				Kernel.Jailbreak(0);
 			
@@ -120,6 +128,8 @@ namespace SharpGLES
 		private const uint GB = MB * 1024;
 		private void InitializePiglet(ulong SystemMemory, ulong VideoSharedMemory, ulong FlexibleMemory, ulong VideoPrivateMemory)
 		{
+			Kernel.Log("Intializing Piglet...");
+
 			var Module  = Kernel.LoadStartModule(EGL.Path);
 
 			if ((Module & 0x80000000) != 0)
@@ -146,15 +156,19 @@ namespace SharpGLES
 			Config.dbgPosCmd_0x4C = 0;
 			Config.unk_0x5C = 2;
 
-			if (!EGL.scePigletSetConfigurationVSH(Config))
+            Kernel.Log("Configuring Piglet...");
+
+            if (!EGL.scePigletSetConfigurationVSH(Config))
 			{
 				throw new Exception("Set Piglet configuration Failed");
 			}
 		}
 
 		private void SetCompositorMemory(ulong SystemShared, ulong VideoShared, ulong VideoPrivate)
-		{
-			sceSysmoduleLoadModuleByNameInternal("libSceCompositeExt", 0, 0, 0, 0);
+        {
+            Kernel.Log("Loading Compositor...");
+
+            sceSysmoduleLoadModuleByNameInternal("libSceCompositeExt", 0, 0, 0, 0);
             sceApplicationInitialize("libSceCompositeExt");
 			var Result = sceCompositorInitWithProcessOrder(SystemShared, VideoShared, VideoPrivate, 1);
 
@@ -169,7 +183,8 @@ namespace SharpGLES
 
 		[DllImport("libSceSysmodule.sprx")]
         private static extern uint sceSysmoduleLoadModuleByNameInternal(string Name, ulong UnkA, ulong UnkB, ulong UnkC, ulong UnkD);
-        [DllImport("libSceSysCore.sprx")]
+        
+		[DllImport("libSceSysCore.sprx")]
 		private static extern void sceApplicationInitialize(string Name);
 
         [DllImport("libSceCompositeExt.sprx")]
@@ -177,6 +192,8 @@ namespace SharpGLES
 #endif
         private void InitializeWindow()
 		{
+			Kernel.Log("Intializing EGL...");
+
 #if !ORBIS
 			_nativeDisplay = EGLDC.GetDC(_handle);
 #endif
@@ -212,9 +229,9 @@ namespace SharpGLES
 #endif
 		}
 
-		private void InitializeEL()
+		private void InitializeEGL()
 		{
-			
+			Kernel.Log("Initializing EGL Display...");
 #if ORBIS
 			int[] configAttributes =
 			{
@@ -267,6 +284,8 @@ namespace SharpGLES
 #endif
 
 			_surface = EGL.CreateWindowSurface(_display, configs, _handle, surfaceAttributes);
+
+			Kernel.Log("Window Surface Created.");
 			
 			int[] contextAttibutes =
 			{
@@ -276,7 +295,9 @@ namespace SharpGLES
 			
 			_context = EGL.CreateContext(_display, configs, IntPtr.Zero, contextAttibutes);
 
-			if (_context == IntPtr.Zero)
+            Kernel.Log("GL Context Created.");
+
+            if (_context == IntPtr.Zero)
 				throw new Exception("Failed to Create the EGL Context");
 
 			EGL.MakeCurrent(_display, _surface, _surface, _context);
