@@ -37,7 +37,7 @@ namespace SharpGLES
             this.Width = Width;
             this.Height = Height;
             this.SystemSharedMemory = SystemSharedMemory;
-            this.VideoSharedMemory = VideoPrivateMemory;
+            this.VideoSharedMemory = VideoSharedMemory;
             this.FlexibleSharedMemory = FlexibleSharedMemory;
             this.VideoPrivateMemory = VideoPrivateMemory;
 

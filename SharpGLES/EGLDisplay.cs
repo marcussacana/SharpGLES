@@ -24,6 +24,8 @@ namespace SharpGLES
 		{
 			this.Width = Settings.Width;
 			this.Height = Settings.Height;
+
+			this.ForceShaderCompiler = Settings.ForceShaderCompiler;
 			
 #if ORBIS
 			InitializePiglet(Settings.SystemSharedMemory, Settings.VideoSharedMemory, Settings.FlexibleSharedMemory, Settings.VideoPrivateMemory);
@@ -31,8 +33,6 @@ namespace SharpGLES
 #else
 			_handle = Settings.Handle;
 #endif
-
-			this.ForceShaderCompiler = Settings.ForceShaderCompiler;
 			
 			InitializeWindow();
 			InitializeEGL();
