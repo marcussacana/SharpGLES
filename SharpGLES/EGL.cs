@@ -268,10 +268,10 @@ namespace SharpGLES
 #if ORBIS
 		//Definitions by OpenOrbis and Flatz
 		[DllImport(Path, EntryPoint = "scePigletSetConfigurationVSH")]
-		public static extern bool scePigletSetConfigurationVSH(ScePglConfig Config); 
+		public static extern bool scePigletSetConfigurationVSH(OrbisPglConfig Config); 
 
 		[StructLayout(LayoutKind.Explicit, Size = SIZEOF_ORBIS_PGL_CONFIG)]
-		public struct ScePglConfig
+		public struct OrbisPglConfig
 		{
 			public const int SIZEOF_ORBIS_PGL_CONFIG = 0x88;
 
@@ -332,7 +332,7 @@ namespace SharpGLES
 		}
 		
 		[StructLayout(LayoutKind.Sequential)]
-		public struct ScePglWindow {
+		public struct OrbisPglWindow {
 			public uint uID;      /* must be in [0-7] range. */
 			public uint uWidth;
 			public uint uHeight;

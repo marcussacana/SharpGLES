@@ -140,9 +140,9 @@ namespace SharpGLES
 			if (VideoPrivateMemory > 0)
 				SetCompositorMemory(SystemMemory, VideoSharedMemory, VideoPrivateMemory);
 			
-			EGL.ScePglConfig Config = new EGL.ScePglConfig();
+			EGL.OrbisPglConfig Config = new EGL.OrbisPglConfig();
 			
-			Config.size = (uint)Marshal.SizeOf(typeof(EGL.ScePglConfig));
+			Config.size = (uint)Marshal.SizeOf(typeof(EGL.OrbisPglConfig));
 			Config.flags = EGL.ORBIS_PGL_FLAGS_USE_COMPOSITE_EXT | EGL.ORBIS_PGL_FLAGS_USE_FLEXIBLE_MEMORY | 0x60;
 			Config.processOrder = 1;
 			Config.systemSharedMemorySize = SystemMemory;
@@ -219,8 +219,8 @@ namespace SharpGLES
 				throw new EGLException("BindAPI failed.");
 			}
 #if ORBIS
-			_handle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(EGL.ScePglWindow)));
-			var Window = new EGL.ScePglWindow()
+			_handle = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(EGL.OrbisPglWindow)));
+			var Window = new EGL.OrbisPglWindow()
 			{
 				uWidth =  (uint)Width,
 				uHeight =  (uint)Height
